@@ -1,6 +1,7 @@
 import tensorflow.compat.v1 as tf
 import random
 import time
+import numpy
 
 tf.disable_v2_behavior()
 
@@ -24,6 +25,9 @@ optimizer = tf.train.GradientDescentOptimizer(0.01).minimize(cost)
 def model_add(a,b):
 	return a+b
 
+cost_inputs = tf.placeholder(tf.float32,[None])
+avg = tf.reduce_mean(cost_inputs)
+
 with  tf.Session() as session:
 
 	session.run(tf.global_variables_initializer())
@@ -33,10 +37,11 @@ with  tf.Session() as session:
 	writer = tf.summary.FileWriter('E:/Logs/'+timeStamp+'/',session.graph)
 	
 	print('a:',session.run(a))
-
+	
 	cost_list = []
 
 	tf.summary.scalar("cost",cost)
+	tf.summary.scalar("avg",avg)
 	merged_summaries = tf.summary.merge_all()
 
 	# 训练
@@ -56,16 +61,19 @@ with  tf.Session() as session:
 		c = cost.eval(feed_dict={y_input:sum_value,inputs:array},session=session)
 		# print(c)
 
-		summary = session.run(merged_summaries, feed_dict={y_input:sum_value,inputs:array})
-		writer.add_summary(summary=summary, global_step=i)
-
 		#保存30个误差结果
 		cost_list.append(c)
 		if len(cost_list) > 30:
 			cost_list.pop(0)
 
+		avg_temp_data = avg.eval(feed_dict={cost_inputs:cost_list},session=session)
+		print(avg_temp_data)
+
+		summary = session.run(merged_summaries, feed_dict={y_input:sum_value,inputs:array,cost_inputs:cost_list})
+		writer.add_summary(summary=summary, global_step=i)
+
 		# 平均误差足够小，不再训练。防止单个误差的偶然性很小导致训练结果不稳定
-		if sum(cost_list)/len(cost_list) <0.00001:
+		if avg_temp_data <0.00001:
 			break
 
 
