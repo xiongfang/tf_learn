@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>25db45e1-6ba7-4eaf-873f-41c67ff1a54e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>PolicyIterator.py</StartupFile>
+    <StartupFile>five_chess_Actor-Critic.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,13 +22,14 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="five_chess_Actor-Critic.py" />
     <Compile Include="Actor-Critic.py" />
     <Compile Include="additive_v2.py" />
     <Compile Include="additive.py" />
     <Compile Include="five_chess_env.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="PolicyIterator.py">
+    <Compile Include="five_chess_dqn.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
