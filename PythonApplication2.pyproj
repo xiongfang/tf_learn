@@ -4,14 +4,14 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>25db45e1-6ba7-4eaf-873f-41c67ff1a54e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>five_chess_Actor-Critic.py</StartupFile>
+    <StartupFile>TestModel.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>PythonApplication2</Name>
     <RootNamespace>PythonApplication2</RootNamespace>
-    <InterpreterId>MSBuild|env|$(MSBuildProjectFullPath)</InterpreterId>
+    <InterpreterId>Global|PythonCore|3.7</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,6 +22,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BioID.py" />
     <Compile Include="five_chess_Actor-Critic.py" />
     <Compile Include="Actor-Critic.py" />
     <Compile Include="additive_v2.py" />
@@ -32,17 +33,16 @@
     <Compile Include="five_chess_dqn.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="pgm_2_jpg.py" />
+    <Compile Include="ProcessData.py" />
+    <Compile Include="ProcessData2.py" />
+    <Compile Include="cnn.py" />
+    <Compile Include="TestModel.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Interpreter Include="E:\venv\env\">
-      <Id>env</Id>
-      <Version>3.7</Version>
-      <Description>env (Python 3.7 (64-bit))</Description>
-      <InterpreterPath>Scripts\python.exe</InterpreterPath>
-      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
-      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
-      <Architecture>X64</Architecture>
-    </Interpreter>
+    <InterpreterReference Include="Global|PythonCore|3.7" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
