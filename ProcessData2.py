@@ -76,8 +76,8 @@ BATCH_SIZE = 32
 # 被充分打乱。
 ds = image_label_ds.shuffle(buffer_size=len(train_image_paths))
 
-#ds = ds.repeat()
-ds = ds.batch(BATCH_SIZE,drop_remainder = True)
+ds = ds.repeat()
+ds = ds.batch(BATCH_SIZE)
 
 # 当模型在训练的时候，`prefetch` 使数据集在后台取得 batch。
 ds = ds.prefetch(tf.data.AUTOTUNE)
@@ -113,7 +113,8 @@ def loss_fn(labels,logits):
     v = tf.subtract(labels,logits)
     return tf.reduce_sum(tf.abs(v))
 
-epochs = 20
+epochs = 1
+step_count = 1000
 
 timeStamp = str(int(time.time()))
 summary_writer = tf.summary.create_file_writer('E:/Logs/'+timeStamp+'/')
@@ -153,8 +154,10 @@ for epoch in range(epochs):
             % (step, float(np.sum(loss_value)))
         )
         print("Seen so far: %s samples" % ((step + 1) * BATCH_SIZE))
-    with summary_writer.as_default():
-        tf.summary.scalar('loss', float(np.sum(loss_value)), epoch + 1)
+        with summary_writer.as_default():
+            tf.summary.scalar('loss', float(np.sum(loss_value)), step)
+        if step>step_count:
+            break
 
 val_image_label_ds = tf.data.Dataset.zip((val_image_ds, val_label_ds))
 val_image_label_ds = val_image_label_ds.batch(1,drop_remainder = True)
