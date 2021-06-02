@@ -8,8 +8,8 @@ import numpy as np
 import tensorflow.keras as keras
 import time
 
-IMAGE_WIDTH = 49
-IMAGE_HEIGHT = 47
+IMAGE_WIDTH = int(384/4)
+IMAGE_HEIGHT = int(286/4)
 
 path_root = "E:/tf_learn/BioID_Face/data/BioID-FaceDatabase-V1.2"
 
@@ -57,6 +57,8 @@ def load_and_preprocess_image(path):
 model_path_name = "E:/tf_learn/ProcessDataWeights.model"
 model = tf.keras.Sequential([
     tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMAGE_WIDTH, IMAGE_HEIGHT, 3)),
+    tf.keras.layers.MaxPooling2D((2, 2)),
+    tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
     tf.keras.layers.MaxPooling2D((2, 2)),
     tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
     tf.keras.layers.MaxPooling2D((2, 2)),

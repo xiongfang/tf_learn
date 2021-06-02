@@ -35,8 +35,8 @@
     </Compile>
     <Compile Include="pgm_2_jpg.py" />
     <Compile Include="ProcessData.py" />
-    <Compile Include="ProcessData2.py" />
     <Compile Include="cnn.py" />
+    <Compile Include="ProcessData2.py" />
     <Compile Include="TestModel.py">
       <SubType>Code</SubType>
     </Compile>

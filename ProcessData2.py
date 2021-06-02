@@ -8,8 +8,8 @@ import numpy as np
 import tensorflow.keras as keras
 import time
 
-IMAGE_WIDTH = 49
-IMAGE_HEIGHT = 47
+IMAGE_WIDTH = int(384/4)
+IMAGE_HEIGHT = int(286/4)
 
 path_root = "E:/tf_learn/BioID_Face/data/BioID-FaceDatabase-V1.2"
 
@@ -89,6 +89,8 @@ model = tf.keras.Sequential([
     tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
     tf.keras.layers.MaxPooling2D((2, 2)),
     tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+    tf.keras.layers.MaxPooling2D((2, 2)),
+    tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(64, activation='relu'),
     tf.keras.layers.Dense(4, activation = 'relu')])
@@ -109,9 +111,9 @@ optimizer = keras.optimizers.Adam(learning_rate=0.001)
 tf_loss_fn = tf.keras.losses.MAE;
 def loss_fn(labels,logits):
     v = tf.subtract(labels,logits)
-    return tf.reduce_sum(tf.square(v))
+    return tf.reduce_sum(tf.abs(v))
 
-epochs = 50
+epochs = 20
 
 timeStamp = str(int(time.time()))
 summary_writer = tf.summary.create_file_writer('E:/Logs/'+timeStamp+'/')
