@@ -106,7 +106,7 @@ except:
 model.summary()
 
 # Instantiate an optimizer to train the model.
-optimizer = keras.optimizers.Adam(learning_rate=0.001)
+optimizer = keras.optimizers.Adam(learning_rate=0.0001)
 # Instantiate a loss function.
 tf_loss_fn = tf.keras.losses.MAE;
 def loss_fn(labels,logits):
@@ -114,7 +114,7 @@ def loss_fn(labels,logits):
     return tf.reduce_sum(tf.abs(v))
 
 epochs = 1
-step_count = 1000
+step_count = 200
 
 timeStamp = str(int(time.time()))
 summary_writer = tf.summary.create_file_writer('E:/Logs/'+timeStamp+'/')
@@ -160,7 +160,7 @@ for epoch in range(epochs):
             break
 
 val_image_label_ds = tf.data.Dataset.zip((val_image_ds, val_label_ds))
-val_image_label_ds = val_image_label_ds.batch(1,drop_remainder = True)
+val_image_label_ds = val_image_label_ds.batch(BATCH_SIZE,drop_remainder = True)
 # Iterate over the batches of the dataset.
 for index,(x_batch_train,y_batch_train) in enumerate(val_image_label_ds):
     logits = model(x_batch_train, training=False)  # Logits for this minibatch

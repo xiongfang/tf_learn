@@ -37,7 +37,8 @@
     <Compile Include="ProcessData.py" />
     <Compile Include="cnn.py" />
     <Compile Include="ProcessData2.py" />
-    <Compile Include="TestModel.py">
+    <Compile Include="TestModel.py" />
+    <Compile Include="TransferLearning.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

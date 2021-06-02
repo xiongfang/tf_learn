@@ -18,7 +18,7 @@ data_root = pathlib.Path(path_root)
 all_image_paths = list(data_root.glob('*.jpg'))
 all_image_paths = [str(path) for path in all_image_paths]
 train_image_paths = all_image_paths[:1000]
-val_image_paths = all_image_paths[1000:]
+val_image_paths = all_image_paths[:1000]
 
 
 def get_eye_pos(eye_file):
@@ -41,7 +41,7 @@ all_label_paths = [str(path) for path in all_label_paths]
 all_image_labels = [ get_eye_pos(path) for path in all_label_paths]
 
 train_image_labels = all_image_labels[:1000]
-val_image_labels = all_image_labels[1000:]
+val_image_labels = all_image_labels[:1000]
 
 def preprocess_image(image):
   image = tf.image.decode_jpeg(image, channels=3)
