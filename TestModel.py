@@ -56,16 +56,15 @@ def load_and_preprocess_image(path):
 
 model_path_name = "E:/tf_learn/ProcessDataWeights.model"
 model = tf.keras.Sequential([
-    tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMAGE_WIDTH, IMAGE_HEIGHT, 3)),
+    tf.keras.layers.Conv2D(32, (3, 3), activation='elu', input_shape=(IMAGE_WIDTH, IMAGE_HEIGHT, 3)),
     tf.keras.layers.MaxPooling2D((2, 2)),
-    tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+    tf.keras.layers.Conv2D(64, (3, 3), activation='elu'),
     tf.keras.layers.MaxPooling2D((2, 2)),
-    tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+	tf.keras.layers.Conv2D(128, (3, 3), activation='elu'),
     tf.keras.layers.MaxPooling2D((2, 2)),
-    tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
     tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(64, activation='relu'),
-    tf.keras.layers.Dense(4, activation = 'relu')])
+    tf.keras.layers.Dense(128, activation='elu'),
+    tf.keras.layers.Dense(4, activation = 'elu')])
 model.load_weights(model_path_name)
 
 path_ds = tf.data.Dataset.from_tensor_slices(val_image_paths)

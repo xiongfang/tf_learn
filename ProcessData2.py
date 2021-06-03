@@ -84,13 +84,15 @@ ds = ds.prefetch(tf.data.AUTOTUNE)
 
 model_path_name = "E:/tf_learn/ProcessDataWeights.model"
 model = tf.keras.Sequential([
-    tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMAGE_WIDTH, IMAGE_HEIGHT, 3)),
+    tf.keras.layers.Conv2D(32, (3, 3), activation='elu', input_shape=(IMAGE_WIDTH, IMAGE_HEIGHT, 3)),
     tf.keras.layers.MaxPooling2D((2, 2)),
-    tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+    tf.keras.layers.Conv2D(64, (3, 3), activation='elu'),
+    tf.keras.layers.MaxPooling2D((2, 2)),
+	tf.keras.layers.Conv2D(128, (3, 3), activation='elu'),
     tf.keras.layers.MaxPooling2D((2, 2)),
     tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(64, activation='relu'),
-    tf.keras.layers.Dense(4, activation = 'relu')])
+    tf.keras.layers.Dense(128, activation='elu',kernel_regularizer = tf.keras.regularizers.L1(0.01)),
+    tf.keras.layers.Dense(4, activation = 'elu')])
 
 
 try:
@@ -108,10 +110,10 @@ optimizer = keras.optimizers.Adam(learning_rate=0.0001)
 tf_loss_fn = tf.keras.losses.MAE;
 def loss_fn(labels,logits):
     v = tf.subtract(labels,logits)
-    return tf.reduce_sum(tf.abs(v))
+    return tf.reduce_sum(tf.square(v))
 
 epochs = 1
-step_count = 2000
+step_count = 200
 
 timeStamp = str(int(time.time()))
 summary_writer = tf.summary.create_file_writer('E:/Logs/'+timeStamp+'/')
