@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>25db45e1-6ba7-4eaf-873f-41c67ff1a54e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>MLPMixer.py</StartupFile>
+    <StartupFile>BioID_MLPMixer.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -23,6 +23,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BioID.py" />
+    <Compile Include="BioIDDataSet.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="BioID_MLPMixerTest.py" />
+    <Compile Include="BioID_MLPMixer.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="five_chess_Actor-Critic.py" />
     <Compile Include="Actor-Critic.py" />
     <Compile Include="additive_v2.py" />
