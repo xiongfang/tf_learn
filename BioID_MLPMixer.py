@@ -26,9 +26,9 @@ model_path_name = "E:/tf_learn/BioID_MLPMixerWeights.model"
 inputs = layers.Input(shape=(width, height,channel))
 #h = layers.Reshape([28, 28, 1])(inputs)
 mlp_mixer = MLPMixer(num_classes=4, 
-                     num_blocks=2, 
-                     patch_size=4, 
-                     hidden_dim=28, 
+                     num_blocks=4, 
+                     patch_size=8, 
+                     hidden_dim=36, 
                      tokens_mlp_dim=height,
                      channels_mlp_dim=width)(inputs)
 model = tf.keras.Model(inputs=inputs, outputs=mlp_mixer)
@@ -42,8 +42,10 @@ except:
 timeStamp = str(int(time.time()))
 tbCallBack = TensorBoard( log_dir='E:/Logs/'+timeStamp+'/')
 
+optimizer = keras.optimizers.Adam(learning_rate=0.0001)
+
 # Train
-model.compile(optimizer='adam',
+model.compile(optimizer=optimizer,
               loss=tf.keras.losses.MAE,
               metrics=[keras.metrics.mae])
 

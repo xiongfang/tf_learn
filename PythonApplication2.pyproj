@@ -26,7 +26,6 @@
     <Compile Include="BioIDDataSet.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="BioID_MLPMixerTest.py" />
     <Compile Include="BioID_MLPMixer.py">
       <SubType>Code</SubType>
     </Compile>
