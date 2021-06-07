@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>25db45e1-6ba7-4eaf-873f-41c67ff1a54e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>ProcessData2.py</StartupFile>
+    <StartupFile>MLPMixer.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -33,6 +33,17 @@
     <Compile Include="five_chess_dqn.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MLPMixer.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="nd_mlp_mixer\dense_on_axis.py" />
+    <Compile Include="nd_mlp_mixer\layers.py" />
+    <Compile Include="nd_mlp_mixer\mlp.py" />
+    <Compile Include="nd_mlp_mixer\mlp_mixer.py" />
+    <Compile Include="nd_mlp_mixer\nd_mixer.py" />
+    <Compile Include="nd_mlp_mixer\scalar_gate.py" />
+    <Compile Include="nd_mlp_mixer\version.py" />
+    <Compile Include="nd_mlp_mixer\__init__.py" />
     <Compile Include="pgm_2_jpg.py" />
     <Compile Include="ProcessData.py" />
     <Compile Include="cnn.py" />
@@ -45,6 +56,9 @@
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.7" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="nd_mlp_mixer\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
