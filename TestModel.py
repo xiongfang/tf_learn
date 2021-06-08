@@ -11,14 +11,14 @@ import time
 IMAGE_WIDTH = int(384/4)
 IMAGE_HEIGHT = int(286/4)
 
-path_root = "E:/tf_learn/BioID_Face/data/BioID-FaceDatabase-V1.2"
+path_root = "E:/DataSet/BioID_Face/data/BioID-FaceDatabase-V1.2"
 
 data_root = pathlib.Path(path_root)
 
 all_image_paths = list(data_root.glob('*.jpg'))
 all_image_paths = [str(path) for path in all_image_paths]
 train_image_paths = all_image_paths[:1000]
-val_image_paths = all_image_paths[:1000]
+val_image_paths = all_image_paths[1000:]
 
 
 def get_eye_pos(eye_file):
@@ -41,7 +41,7 @@ all_label_paths = [str(path) for path in all_label_paths]
 all_image_labels = [ get_eye_pos(path) for path in all_label_paths]
 
 train_image_labels = all_image_labels[:1000]
-val_image_labels = all_image_labels[:1000]
+val_image_labels = all_image_labels[1000:]
 
 def preprocess_image(image):
   image = tf.image.decode_jpeg(image, channels=3)
@@ -63,7 +63,7 @@ model = tf.keras.Sequential([
 	tf.keras.layers.Conv2D(128, (3, 3), activation='elu'),
     tf.keras.layers.MaxPooling2D((2, 2)),
     tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(128, activation='elu'),
+    tf.keras.layers.Dense(128, activation='elu',kernel_regularizer = tf.keras.regularizers.L1(0.01)),
     tf.keras.layers.Dense(4, activation = 'elu')])
 model.load_weights(model_path_name)
 

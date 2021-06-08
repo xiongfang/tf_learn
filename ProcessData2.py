@@ -11,7 +11,7 @@ import time
 IMAGE_WIDTH = int(384/4)
 IMAGE_HEIGHT = int(286/4)
 
-path_root = "E:/tf_learn/BioID_Face/data/BioID-FaceDatabase-V1.2"
+path_root = "E:/DataSet/BioID_Face/data/BioID-FaceDatabase-V1.2"
 
 
 data_root = pathlib.Path(path_root)
@@ -109,8 +109,8 @@ optimizer = keras.optimizers.Adam(learning_rate=0.0001)
 # Instantiate a loss function.
 tf_loss_fn = tf.keras.losses.MAE;
 def loss_fn(labels,logits):
-    v = tf.subtract(labels,logits)
-    return tf.reduce_sum(tf.square(v))
+    v = tf.reduce_sum(tf.square(labels - logits),axis = 1)
+    return tf.reduce_mean(v)
 
 epochs = 1
 step_count = 200
@@ -135,7 +135,7 @@ for epoch in range(epochs):
             logits = model(x_batch_train, training=True)  # Logits for this minibatch
 
             # Compute the loss value for this minibatch.
-            loss_value = tf_loss_fn(y_batch_train, logits)
+            loss_value = loss_fn(y_batch_train, logits)
 
         # Use the gradient tape to automatically retrieve
         # the gradients of the trainable variables with respect to the loss.
