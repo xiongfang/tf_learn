@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 IMAGE_WIDTH = int(384/4)
 IMAGE_HEIGHT = int(286/4)
 
-path_root = "E:/tf_learn/BioID_Face/data/BioID-FaceDatabase-V1.2"
+path_root = "E:/DataSet/BioID_Face/data/BioID-FaceDatabase-V1.2"
 
 
 data_root = pathlib.Path(path_root)
@@ -40,10 +40,12 @@ all_image_labels = [ get_eye_pos(path) for path in all_label_paths]
 train_image_labels = all_image_labels[:1000]
 val_image_labels = all_image_labels[1000:]
 
+rescale = tf.keras.layers.experimental.preprocessing.Rescaling(1./127.5, offset= -1)
 def preprocess_image(image):
   image = tf.image.decode_jpeg(image, channels=3)
-  image = tf.image.resize(image, [IMAGE_WIDTH, IMAGE_HEIGHT])
+  image = tf.image.resize(image, (IMAGE_WIDTH, IMAGE_HEIGHT))
   image /= 255.0  # normalize to [0,1] range
+  #image = rescale(image)
   return image
 
 def load_and_preprocess_image(path):
@@ -80,7 +82,7 @@ ds = ds.batch(BATCH_SIZE)
 ds = ds.prefetch(tf.data.AUTOTUNE)
 
 val_image_label_ds = tf.data.Dataset.zip((val_image_ds, val_label_ds))
-val_image_label_ds = val_image_label_ds.batch(BATCH_SIZE)
+val_image_label_ds = val_image_label_ds.batch(BATCH_SIZE,drop_remainder = True)
 
 def get_bioid_ds():
 	return ds,val_image_label_ds,train_image_paths,val_image_paths

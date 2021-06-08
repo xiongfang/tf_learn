@@ -11,7 +11,7 @@ import time
 IMAGE_WIDTH = 160
 IMAGE_HEIGHT = 160
 
-path_root = "E:/tf_learn/BioID_Face/data/BioID-FaceDatabase-V1.2"
+path_root = "E:/DataSet/BioID_Face/data/BioID-FaceDatabase-V1.2"
 
 
 data_root = pathlib.Path(path_root)
