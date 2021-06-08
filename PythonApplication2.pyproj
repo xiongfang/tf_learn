@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>25db45e1-6ba7-4eaf-873f-41c67ff1a54e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>ProcessData3.py</StartupFile>
+    <StartupFile>ProcessData4.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -54,11 +54,15 @@
     <Compile Include="pgm_2_jpg.py" />
     <Compile Include="ProcessData.py" />
     <Compile Include="cnn.py" />
+    <Compile Include="ProcessData4.py" />
     <Compile Include="ProcessData3.py" />
     <Compile Include="ProcessData2.py" />
     <Compile Include="TestModelTransferLearning.py" />
     <Compile Include="TestModel.py" />
     <Compile Include="TransferLearning.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="WFLWDataSet.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
