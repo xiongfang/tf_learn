@@ -30,6 +30,9 @@
     <Compile Include="BioID_MLPMixer.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="callbacks.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="five_chess_Actor-Critic.py" />
     <Compile Include="Actor-Critic.py" />
     <Compile Include="additive_v2.py" />

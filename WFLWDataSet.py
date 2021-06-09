@@ -94,5 +94,5 @@ def test(filename,landmark,landmark_pre):
         landmark = landmark_pre.reshape(-1,2)*[h,w]
         for (x,y) in landmark.astype(np.int32):
             cv2.circle(img, (x,y),1,(0,255,0))
-    cv2.imshow(filename, img)
-
+    #cv2.imshow(filename, img)
+    return img

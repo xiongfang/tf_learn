@@ -9,6 +9,7 @@ import tensorflow.keras as keras
 import time
 import WFLWDataSet
 from tensorflow.keras.callbacks import TensorBoard
+from callbacks import LogImages
 
 train_ds = WFLWDataSet.image_label_ds
 val_ds = WFLWDataSet.val_image_label_ds
@@ -21,9 +22,16 @@ IMAGE_WIDTH, IMAGE_HEIGHT,IMAGE_CHANNEL =  img.shape[-3:]
 landmark = list(train_ds.take(1).as_numpy_iterator())[0][1]
 print(len(landmark[0]))
 
-model_path_name = "E:/ProcessDataWeights4.model"
+name = "hrnetv2"
 
+# Checkpoint is used to resume training.
+checkpoint_dir = os.path.join("E:/checkpoints", name)
+if not os.path.exists(checkpoint_dir):
+    os.makedirs(checkpoint_dir)
+    print("Checkpoint directory created: {}".format(checkpoint_dir))
 
+timeStamp = str(int(time.time()))
+log_dir='E:/Logs/'+timeStamp+'/'
 
 model = tf.keras.Sequential([
     tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNEL)),
@@ -52,53 +60,79 @@ model = tf.keras.Sequential([
     tf.keras.layers.BatchNormalization(),
 
     tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(1024, activation = 'relu'),
+    tf.keras.layers.Dense(1024, activation = 'relu',kernel_regularizer = tf.keras.regularizers.L2(0.00001)),
     tf.keras.layers.BatchNormalization(),
     tf.keras.layers.Dense(196, activation = None)
     ])
+
+
+model.summary()
 
 def test():
     index = random.randint(0,len(WFLWDataSet.test_filenames)-1)
     filename = WFLWDataSet.test_filenames[index]
     f = WFLWDataSet.load_and_preprocess_image(filename)
     logits = model(tf.expand_dims(f,0), training=False)  # Logits for this minibatch
-    WFLWDataSet.test(filename,WFLWDataSet.test_landmarks[index],logits[0].numpy())
-    cv2.waitKey()
+    img = WFLWDataSet.test(filename,WFLWDataSet.test_landmarks[index],logits[0].numpy())
+    cv2.imshow(filename,img)
 
 #test()
 
-'''
-try:
-    load_status = model.load_weights(model_path_name)
-except:
-    print("load model weights failed")
-'''
+# Model built. Restore the latest model if checkpoints are available.
+latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
+if latest_checkpoint:
+    print("Checkpoint found: {}, restoring...".format(latest_checkpoint))
+    model.load_weights(latest_checkpoint)
+    print("Checkpoint restored: {}".format(latest_checkpoint))
+else:
+    print("Checkpoint not found. Model weights will be initialized randomly.")
 
-model.summary()
 
-timeStamp = str(int(time.time()))
-tbCallBack = TensorBoard( log_dir='E:/Logs/'+timeStamp+'/')
+# Schedule the learning rate with (epoch to start, learning rate) tuples
+schedule = [(1, 0.001),
+            (30, 0.0001),
+            (50, 0.00001)]
 
-opt = tf.keras.optimizers.Adam(0.001)
+# Save a checkpoint. This could be used to resume training.
+callback_checkpoint = keras.callbacks.ModelCheckpoint(
+    filepath=os.path.join(checkpoint_dir, name),
+    save_weights_only=True,
+    verbose=1,
+    save_best_only=True)
+
+callback_tensorboard = TensorBoard(log_dir=log_dir,
+                        histogram_freq=1024,
+                        write_graph=True,
+                        update_freq='batch' #'epoch'
+                        )
+# Learning rate decay.
+#callback_lr = EpochBasedLearningRateSchedule(schedule)
+
+index = random.randint(0,len(WFLWDataSet.test_filenames)-1)
+
+# Log a sample image to tensorboard.
+callback_image = LogImages(log_dir, WFLWDataSet.test_filenames[index],WFLWDataSet.test_landmarks[index])
+
+# List all the callbacks.
+callbacks = [callback_checkpoint, callback_tensorboard, #callback_lr,
+                callback_image]
+
+opt = tf.keras.optimizers.Adam(0.00001)
 # Train
 model.compile(optimizer=opt,
               loss=tf.keras.losses.MAE,
               metrics=[keras.metrics.mae])
 
-steps_per_epoch = 100 #int(len(WFLWDataSet.train_filenames)/WFLWDataSet.BATCH_SIZE)
-history = model.fit(train_ds, epochs=1,
-                    validation_data=val_ds, verbose=1,callbacks=[tbCallBack])
-
-model.save_weights(model_path_name)
-print("model saved")
+steps_per_epoch = 2 #int(len(WFLWDataSet.train_filenames)/WFLWDataSet.BATCH_SIZE)
+history = model.fit(train_ds, epochs=10
+                    #,steps_per_epoch=steps_per_epoch
+                    ,validation_data=val_ds
+                    ,verbose=1
+                    ,callbacks=callbacks
+                    #,validation_steps=1
+                    )
 
 
 for i in range(4):
-    index = random.randint(0,len(WFLWDataSet.test_filenames)-1)
-    filename = WFLWDataSet.test_filenames[index]
-    f = WFLWDataSet.load_and_preprocess_image(filename)
-    logits = model(tf.expand_dims(f,0), training=False)  # Logits for this minibatch
-
-    WFLWDataSet.test(filename,WFLWDataSet.test_landmarks[index],logits[0].numpy())
-
+    test()
 cv2.waitKey()
