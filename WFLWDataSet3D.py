@@ -9,9 +9,10 @@ from mark_operator import MarkOperator
 
 MO = MarkOperator()
 
-IMAGE_WIDTH = 256
-IMAGE_HEIGHT = 256
+IMAGE_WIDTH = 32
+IMAGE_HEIGHT = 32
 IMAGE_CHANNEL = 3
+HEATMAP_SIZE = 8
 
 image_shape = (IMAGE_WIDTH,IMAGE_HEIGHT,IMAGE_CHANNEL)
 
@@ -20,7 +21,7 @@ path_root = "E:/DataSet/WFLW"
 FILE_WIDTH = 112
 FILE_HEIGHT = 112
 
-NUM_MARKS = 98
+NUM_MARKS = 2
 
 data_root = pathlib.Path(path_root)
 print(data_root)
@@ -63,9 +64,19 @@ def gen_data(file_list):
             attribute = line[197:203]
             euler_angle = line[203:206]
 
+            
+
             landmark = np.asarray(landmark, dtype=np.float32)
             landmark = landmark.reshape(-1, 2)
             landmark = np.pad(landmark, ((0, 0), (0, 1)),mode='constant', constant_values=0) #增加z=0
+
+            temp = landmark
+            landmark = []
+            #landmark.append(temp[54])
+            landmark.append(temp[96])
+            landmark.append(temp[97])
+            #landmark.append(temp[90])
+            landmark = np.asarray(landmark, dtype=np.float32)
 
             attribute = np.asarray(attribute, dtype=np.int32)
             euler_angle = np.asarray(euler_angle,dtype=np.float32)
@@ -84,9 +95,9 @@ def gen_data(file_list):
 def preprocess_image(image):
     image = tf.image.decode_png(image, channels=IMAGE_CHANNEL)
     image = tf.image.resize(image, (IMAGE_WIDTH, IMAGE_HEIGHT))
-    #image /= 255.0  #normalize to [0,1] range
+    image /= 255.0  #normalize to [0,1] range
     #image = rescale(image)
-    image = normalize(image)
+    #image = normalize(image)
     return image
 
 def load_and_preprocess_image(path):
@@ -95,33 +106,38 @@ def load_and_preprocess_image(path):
 
 def preprocess_mark(landmarks):
     for landmark in landmarks:
-        landmark = generate_heatmaps(landmark,(64, 64))
+        landmark = generate_heatmaps(landmark,(HEATMAP_SIZE, HEATMAP_SIZE))
         landmark = np.transpose(landmark, (1, 2, 0))
         yield landmark
 
 train_filenames, train_landmarks, attributes,euler_angles = gen_data(train_label_file)
 
+train_filenames = train_filenames[:10]
+train_landmarks = train_landmarks[:10]
+
 path_ds = tf.data.Dataset.from_tensor_slices(train_filenames)
 image_ds = path_ds.map(load_and_preprocess_image,num_parallel_calls = tf.data.AUTOTUNE)
 
-label_ds = tf.data.Dataset.from_generator(preprocess_mark,output_types=tf.float32,output_shapes=(64, 64, NUM_MARKS),args=[train_landmarks])
+label_ds = tf.data.Dataset.from_generator(preprocess_mark,output_types=tf.float32,output_shapes=(HEATMAP_SIZE, HEATMAP_SIZE, NUM_MARKS),args=[train_landmarks])
 
 image_label_ds = tf.data.Dataset.zip((image_ds, label_ds))
 
-BATCH_SIZE = 16
+BATCH_SIZE = 10
 
 # 设置一个和数据集大小一致的 shuffle buffer size（随机缓冲区大小）以保证数据
 # 被充分打乱。
-image_label_ds = image_label_ds.shuffle(buffer_size=100)
+image_label_ds = image_label_ds.shuffle(buffer_size=1000)
 image_label_ds = image_label_ds.batch(BATCH_SIZE)
 # 当模型在训练的时候，`prefetch` 使数据集在后台取得 batch。
 image_label_ds = image_label_ds.prefetch(tf.data.AUTOTUNE)
 
-test_filenames, test_landmarks, attributes,euler_angles = gen_data(train_label_file)
+test_filenames, test_landmarks, attributes,euler_angles = gen_data(val_label_file)
+test_filenames = test_filenames[:2]
+test_landmarks = test_landmarks[:2]
 
 path_ds = tf.data.Dataset.from_tensor_slices(test_filenames)
 val_image_ds = path_ds.map(load_and_preprocess_image)
-val_label_ds = tf.data.Dataset.from_generator(preprocess_mark,output_types=tf.float32,output_shapes=(64, 64, NUM_MARKS),args=[test_landmarks])
+val_label_ds = tf.data.Dataset.from_generator(preprocess_mark,output_types=tf.float32,output_shapes=(HEATMAP_SIZE, HEATMAP_SIZE, NUM_MARKS),args=[test_landmarks])
 
 val_image_label_ds = tf.data.Dataset.zip((val_image_ds, val_label_ds))
 val_image_label_ds = val_image_label_ds.batch(BATCH_SIZE)
@@ -155,16 +171,20 @@ def parse_heatmaps(heatmaps, image_size):
         marks.append(get_peak_location(heatmap, image_size))
 
     # Show individual heatmaps stacked.
-    heatmap_grid = np.hstack(heatmaps[:8])
-    for row in range(1, 12, 1):
-        heatmap_grid = np.vstack(
-            [heatmap_grid, np.hstack(heatmaps[row:row+8])])
+    #heatmap_grid = np.hstack(heatmaps[:8])
+    #for row in range(1, 12, 1):
+    #    heatmap_grid = np.vstack(
+    #        [heatmap_grid, np.hstack(heatmaps[row:row+8])])
 
-    return np.array(marks), heatmap_grid
+    return np.array(marks), None
 
 
 def test(filename,landmark,landmark_pre=None):
     img = cv2.imread(filename)
+    return test_img(img,landmark,landmark_pre)
+
+def test_img(img,landmark,landmark_pre=None):
+    img = cv2.resize(img,(FILE_WIDTH,FILE_HEIGHT))
     for mark in landmark:
         cv2.circle(img, tuple(mark.astype(int)),1,(0,0,255))
     if landmark_pre is None:
@@ -184,14 +204,13 @@ def transpose_marks(landmarks):
     return results
 
 if __name__ == "__main__":
-    index = random.randint(0,len(test_filenames)-1)
+    index = 0#random.randint(0,len(test_filenames)-1)
     img = test(test_filenames[index],transpose_marks(test_landmarks[index]))
     cv2.imshow(test_filenames[index],img)
     cv2.waitKey()
 
-    for label in label_ds.take(1):
-        index = 0
-        marks,_ = parse_heatmaps(label,(FILE_WIDTH,FILE_HEIGHT))
-        img = test(test_filenames[index],marks)
-        cv2.imshow(test_filenames[index],img)
+    for index,(img,label) in enumerate(image_label_ds.take(1)):
+        marks,_ = parse_heatmaps(label[0].numpy(),(FILE_WIDTH,FILE_HEIGHT))
+        img = test_img(cv2.cvtColor(img[0].numpy(),cv2.COLOR_RGB2BGR),marks)
+        cv2.imshow(train_filenames[index],img)
         cv2.waitKey()
