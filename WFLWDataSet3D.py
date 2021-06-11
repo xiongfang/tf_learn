@@ -9,19 +9,19 @@ from mark_operator import MarkOperator
 
 MO = MarkOperator()
 
-IMAGE_WIDTH = 32
-IMAGE_HEIGHT = 32
+IMAGE_WIDTH = 256
+IMAGE_HEIGHT = 256
 IMAGE_CHANNEL = 3
-HEATMAP_SIZE = 8
+HEATMAP_SIZE = 64
 
 image_shape = (IMAGE_WIDTH,IMAGE_HEIGHT,IMAGE_CHANNEL)
 
 path_root = "E:/DataSet/WFLW"
 
-FILE_WIDTH = 112
-FILE_HEIGHT = 112
+FILE_WIDTH = 256
+FILE_HEIGHT = 256
 
-NUM_MARKS = 2
+NUM_MARKS = 98
 
 data_root = pathlib.Path(path_root)
 print(data_root)
@@ -70,11 +70,11 @@ def gen_data(file_list):
             landmark = landmark.reshape(-1, 2)
             landmark = np.pad(landmark, ((0, 0), (0, 1)),mode='constant', constant_values=0) #增加z=0
 
-            temp = landmark
-            landmark = []
+            #temp = landmark
+            #landmark = []
             #landmark.append(temp[54])
-            landmark.append(temp[96])
-            landmark.append(temp[97])
+            #landmark.append(temp[96])
+            #landmark.append(temp[97])
             #landmark.append(temp[90])
             landmark = np.asarray(landmark, dtype=np.float32)
 
@@ -112,8 +112,8 @@ def preprocess_mark(landmarks):
 
 train_filenames, train_landmarks, attributes,euler_angles = gen_data(train_label_file)
 
-train_filenames = train_filenames[:10]
-train_landmarks = train_landmarks[:10]
+train_filenames = train_filenames[:1000]
+train_landmarks = train_landmarks[:1000]
 
 path_ds = tf.data.Dataset.from_tensor_slices(train_filenames)
 image_ds = path_ds.map(load_and_preprocess_image,num_parallel_calls = tf.data.AUTOTUNE)
@@ -122,7 +122,7 @@ label_ds = tf.data.Dataset.from_generator(preprocess_mark,output_types=tf.float3
 
 image_label_ds = tf.data.Dataset.zip((image_ds, label_ds))
 
-BATCH_SIZE = 10
+BATCH_SIZE = 32
 
 # 设置一个和数据集大小一致的 shuffle buffer size（随机缓冲区大小）以保证数据
 # 被充分打乱。
@@ -132,8 +132,8 @@ image_label_ds = image_label_ds.batch(BATCH_SIZE)
 image_label_ds = image_label_ds.prefetch(tf.data.AUTOTUNE)
 
 test_filenames, test_landmarks, attributes,euler_angles = gen_data(val_label_file)
-test_filenames = test_filenames[:2]
-test_landmarks = test_landmarks[:2]
+test_filenames = test_filenames[:200]
+test_landmarks = test_landmarks[:200]
 
 path_ds = tf.data.Dataset.from_tensor_slices(test_filenames)
 val_image_ds = path_ds.map(load_and_preprocess_image)

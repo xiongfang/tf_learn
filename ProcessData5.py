@@ -36,16 +36,16 @@ log_dir='E:/Logs/'+timeStamp+'/'
 
 input_shape = (IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNEL)
 
-#model = hrnet_v2(input_shape=input_shape, output_channels=WFLWDataSet.NUM_MARKS,
-#                    width=10, name=name)
-
+model = hrnet_v2(input_shape=input_shape, output_channels=WFLWDataSet.NUM_MARKS,
+                    width=18, name=name)
+'''
 model = tf.keras.Sequential([
-    tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNEL)),
+    tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNEL),padding="same"),
     #tf.keras.layers.BatchNormalization(),
     tf.keras.layers.MaxPooling2D((2, 2),strides = (2,2)),
-    tf.keras.layers.Conv2D(64, (3, 3),strides = (1,1), activation='relu'),
+    tf.keras.layers.Conv2D(64, (3, 3),strides = (1,1), activation='relu',padding="same"),
     #tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.Conv2D(64, (6, 6),strides = (1,1), activation='relu'),
+    tf.keras.layers.MaxPooling2D((2, 2),strides = (2,2)),
     #tf.keras.layers.BatchNormalization(),
     tf.keras.layers.Conv2D(WFLWDataSet.NUM_MARKS, (1, 1),strides = (1,1), activation=None),
     #tf.keras.layers.BatchNormalization(),
@@ -55,22 +55,20 @@ model = tf.keras.Sequential([
     #tf.keras.layers.BatchNormalization(),
     #tf.keras.layers.Dense(196, activation = None)
     ])
-
+'''
 model.summary()
 
 def loss_fn(y_true,y_pre):
     return tf.reduce_mean(tf.square(y_true - y_pre))
 
 def test():
-    for index,(img,label) in enumerate(train_ds):
+    for index,(img,label) in enumerate(train_ds.take(1)):
         marks,_ = WFLWDataSet.parse_heatmaps(label[0].numpy(),(WFLWDataSet.FILE_WIDTH,WFLWDataSet.FILE_HEIGHT))
         heatmaps = model(img,training=False)  # Logits for this minibatch
         print(np.sum(loss_fn(label,heatmaps)))
         marks_pre, _ = WFLWDataSet.parse_heatmaps(heatmaps[0], (WFLWDataSet.FILE_WIDTH,WFLWDataSet.FILE_HEIGHT))
         img = WFLWDataSet.test_img(cv2.cvtColor(img[0].numpy(),cv2.COLOR_RGB2BGR),marks,marks_pre)
         cv2.imshow("%d"%index,img)
-
-
         cv2.waitKey()
 
 '''
@@ -96,9 +94,10 @@ else:
     print("Checkpoint not found. Model weights will be initialized randomly.")
 
 
-test()
-cv2.waitKey()
+#test()
+#cv2.waitKey()
 
+'''
 # Schedule the learning rate with (epoch to start, learning rate) tuples
 schedule = [(1, 0.001),
             (30, 0.0001),
@@ -128,24 +127,25 @@ callback_image = LogImages(log_dir, WFLWDataSet.test_filenames[index],WFLWDataSe
 callbacks = [callback_checkpoint, callback_tensorboard, #callback_lr,
                 callback_image]
 
-opt = tf.keras.optimizers.Adam(0.001)
+opt = tf.keras.optimizers.Adam(0.0001)
 # Train
-#model.compile(optimizer=opt,
-#              #loss=tf.keras.losses.MSE,
-#              loss = loss,
-#              metrics=[loss])
+model.compile(optimizer=opt,
+              loss=tf.keras.losses.MSE,
+              #loss = loss_fn,
+              metrics=[tf.keras.metrics.mse])
 
-#history = model.fit(train_ds, epochs=100
-#                    #,steps_per_epoch=steps_per_epoch
-#                    ,validation_data=val_ds
-#                    ,verbose=1
-#                    ,callbacks=callbacks
+history = model.fit(train_ds, epochs=10
+                    #,steps_per_epoch=steps_per_epoch
+                    ,validation_data=val_ds
+                    ,verbose=1
+                    ,callbacks=callbacks
 #                    #,validation_steps=1
-#                    )
+                    )
 
+'''
 
-
-epochs = 100
+'''
+epochs = 10
 #step_count = 200
 summary_writer = tf.summary.create_file_writer(log_dir)
 
@@ -192,6 +192,7 @@ for epoch in range(epochs):
 
 model.save_weights(checkpoint_dir+"/"+name)
 print("model saved")
+'''
 
 test()
 cv2.waitKey()
