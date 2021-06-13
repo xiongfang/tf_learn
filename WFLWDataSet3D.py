@@ -9,19 +9,19 @@ from mark_operator import MarkOperator
 
 MO = MarkOperator()
 
-IMAGE_WIDTH = 256
-IMAGE_HEIGHT = 256
-IMAGE_CHANNEL = 3
-HEATMAP_SIZE = 64
+IMAGE_WIDTH = 128
+IMAGE_HEIGHT = 128
+IMAGE_CHANNEL = 1
+HEATMAP_SIZE = 128
 
 image_shape = (IMAGE_WIDTH,IMAGE_HEIGHT,IMAGE_CHANNEL)
 
 path_root = "E:/DataSet/WFLW"
 
-FILE_WIDTH = 256
-FILE_HEIGHT = 256
+FILE_WIDTH = 112
+FILE_HEIGHT = 112
 
-NUM_MARKS = 98
+NUM_MARKS = 2
 
 data_root = pathlib.Path(path_root)
 print(data_root)
@@ -70,11 +70,11 @@ def gen_data(file_list):
             landmark = landmark.reshape(-1, 2)
             landmark = np.pad(landmark, ((0, 0), (0, 1)),mode='constant', constant_values=0) #增加z=0
 
-            #temp = landmark
-            #landmark = []
+            temp = landmark
+            landmark = []
             #landmark.append(temp[54])
-            #landmark.append(temp[96])
-            #landmark.append(temp[97])
+            landmark.append(temp[96])
+            landmark.append(temp[97])
             #landmark.append(temp[90])
             landmark = np.asarray(landmark, dtype=np.float32)
 
@@ -95,9 +95,9 @@ def gen_data(file_list):
 def preprocess_image(image):
     image = tf.image.decode_png(image, channels=IMAGE_CHANNEL)
     image = tf.image.resize(image, (IMAGE_WIDTH, IMAGE_HEIGHT))
-    image /= 255.0  #normalize to [0,1] range
+    #image /= 255.0  #normalize to [0,1] range
     #image = rescale(image)
-    #image = normalize(image)
+    image = normalize(image)
     return image
 
 def load_and_preprocess_image(path):
@@ -106,10 +106,15 @@ def load_and_preprocess_image(path):
 
 def preprocess_mark(landmarks):
     for landmark in landmarks:
-        landmark = generate_heatmaps(landmark,(HEATMAP_SIZE, HEATMAP_SIZE))
-        landmark = np.transpose(landmark, (1, 2, 0))
-        yield landmark
+        heatmaps = generate_heatmaps(landmark,(HEATMAP_SIZE, HEATMAP_SIZE)) #(2,256,256)
+        heatmaps = [heatmaps[0]+heatmaps[1]]
+        heatmaps = np.transpose(heatmaps, (1, 2, 0)) #(256,256,2)
+        #last = heatmaps[0]
+        #for h in heatmaps[1:]:
+        #    last+=h
+        yield heatmaps
 
+        
 train_filenames, train_landmarks, attributes,euler_angles = gen_data(train_label_file)
 
 train_filenames = train_filenames[:1000]
@@ -132,8 +137,8 @@ image_label_ds = image_label_ds.batch(BATCH_SIZE)
 image_label_ds = image_label_ds.prefetch(tf.data.AUTOTUNE)
 
 test_filenames, test_landmarks, attributes,euler_angles = gen_data(val_label_file)
-test_filenames = test_filenames[:200]
-test_landmarks = test_landmarks[:200]
+test_filenames = test_filenames[:100]
+test_landmarks = test_landmarks[:100]
 
 path_ds = tf.data.Dataset.from_tensor_slices(test_filenames)
 val_image_ds = path_ds.map(load_and_preprocess_image)

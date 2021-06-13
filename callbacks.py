@@ -2,16 +2,26 @@
 import cv2
 import tensorflow as tf
 from tensorflow import keras
+import numpy as np
+import random
 
 import WFLWDataSet3D as WFLWDataSet
 
 class LogImages(keras.callbacks.Callback):
-    def __init__(self, logdir, filename,landmark):
+    def __init__(self, logdir):
         super().__init__()
         self.file_writer = tf.summary.create_file_writer(logdir)
-        self.filename = filename
-        self.landmark = WFLWDataSet.transpose_marks(landmark)
     def on_epoch_end(self, epoch, logs={}):
+
+        index = random.randint(0,len(WFLWDataSet.train_filenames)-1)
+        filename = WFLWDataSet.train_filenames[index]
+        landmark = WFLWDataSet.train_landmarks[index]
+
+        self.filename = filename
+        self.true_heatmap = WFLWDataSet.generate_heatmaps(landmark,(WFLWDataSet.FILE_WIDTH,WFLWDataSet.FILE_HEIGHT)) #(2,64,64)
+        self.true_heatmap = np.expand_dims(self.true_heatmap,-1) #(2,64,64,1)
+        self.landmark = WFLWDataSet.transpose_marks(landmark)
+
         # Do prediction.
         f = WFLWDataSet.load_and_preprocess_image(self.filename)
         heatmaps = self.model.predict(tf.expand_dims(f,0))[0]  # Logits for this minibatch
@@ -22,4 +32,8 @@ class LogImages(keras.callbacks.Callback):
         with self.file_writer.as_default():
             # tf.summary needs a 4D tensor
             img_tensor = tf.expand_dims(image_normal, 0)
+            heatmaps = tf.transpose(heatmaps,(2,0,1)) #(2,64,64)
+            heatmaps = tf.expand_dims(heatmaps,-1) #(2,64,64,1)
             tf.summary.image("test-sample", img_tensor, step=epoch)
+            tf.summary.image("pre", heatmaps, step=epoch)
+            tf.summary.image("true", self.true_heatmap, step=epoch)

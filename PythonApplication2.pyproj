@@ -73,6 +73,12 @@
     <Compile Include="TransferLearning.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="unet.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="unet_pp.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="WFLWDataSet.py" />
     <Compile Include="WFLWDataSet3D.py">
       <SubType>Code</SubType>

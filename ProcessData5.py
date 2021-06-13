@@ -11,6 +11,8 @@ import WFLWDataSet3D as WFLWDataSet
 from tensorflow.keras.callbacks import TensorBoard
 from callbacks import LogImages
 from network import hrnet_v2
+import unet
+import unet_pp
 
 train_ds = WFLWDataSet.image_label_ds
 val_ds = WFLWDataSet.val_image_label_ds
@@ -36,9 +38,15 @@ log_dir='E:/Logs/'+timeStamp+'/'
 
 input_shape = (IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNEL)
 
+model = unet_pp.create_segmentation_model(input_shape,1)
+#model = unet.build_model(IMAGE_WIDTH,IMAGE_HEIGHT,WFLWDataSet.NUM_MARKS)
+
+'''
 model = hrnet_v2(input_shape=input_shape, output_channels=WFLWDataSet.NUM_MARKS,
                     width=18, name=name)
-'''
+
+
+
 model = tf.keras.Sequential([
     tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNEL),padding="same"),
     #tf.keras.layers.BatchNormalization(),
@@ -56,6 +64,7 @@ model = tf.keras.Sequential([
     #tf.keras.layers.Dense(196, activation = None)
     ])
 '''
+
 model.summary()
 
 def loss_fn(y_true,y_pre):
@@ -97,7 +106,7 @@ else:
 #test()
 #cv2.waitKey()
 
-'''
+
 # Schedule the learning rate with (epoch to start, learning rate) tuples
 schedule = [(1, 0.001),
             (30, 0.0001),
@@ -118,23 +127,21 @@ callback_tensorboard = TensorBoard(log_dir=log_dir,
 # Learning rate decay.
 #callback_lr = EpochBasedLearningRateSchedule(schedule)
 
-index = random.randint(0,len(WFLWDataSet.test_filenames)-1)
-
 # Log a sample image to tensorboard.
-callback_image = LogImages(log_dir, WFLWDataSet.test_filenames[index],WFLWDataSet.test_landmarks[index])
+callback_image = LogImages(log_dir)
 
 # List all the callbacks.
 callbacks = [callback_checkpoint, callback_tensorboard, #callback_lr,
                 callback_image]
 
-opt = tf.keras.optimizers.Adam(0.0001)
+#opt = tf.keras.optimizers.Adam(0.001)
 # Train
-model.compile(optimizer=opt,
+model.compile(optimizer='Nadam',
               loss=tf.keras.losses.MSE,
               #loss = loss_fn,
               metrics=[tf.keras.metrics.mse])
 
-history = model.fit(train_ds, epochs=10
+history = model.fit(train_ds, epochs=1000
                     #,steps_per_epoch=steps_per_epoch
                     ,validation_data=val_ds
                     ,verbose=1
@@ -142,7 +149,7 @@ history = model.fit(train_ds, epochs=10
 #                    #,validation_steps=1
                     )
 
-'''
+
 
 '''
 epochs = 10
