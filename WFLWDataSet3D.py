@@ -123,7 +123,7 @@ train_landmarks = train_landmarks[:1000]
 path_ds = tf.data.Dataset.from_tensor_slices(train_filenames)
 image_ds = path_ds.map(load_and_preprocess_image,num_parallel_calls = tf.data.AUTOTUNE)
 
-label_ds = tf.data.Dataset.from_generator(preprocess_mark,output_types=tf.float32,output_shapes=(HEATMAP_SIZE, HEATMAP_SIZE, NUM_MARKS),args=[train_landmarks])
+label_ds = tf.data.Dataset.from_generator(preprocess_mark,output_types=tf.float32,output_shapes=(HEATMAP_SIZE, HEATMAP_SIZE, IMAGE_CHANNEL),args=[train_landmarks])
 
 image_label_ds = tf.data.Dataset.zip((image_ds, label_ds))
 
@@ -142,7 +142,7 @@ test_landmarks = test_landmarks[:100]
 
 path_ds = tf.data.Dataset.from_tensor_slices(test_filenames)
 val_image_ds = path_ds.map(load_and_preprocess_image)
-val_label_ds = tf.data.Dataset.from_generator(preprocess_mark,output_types=tf.float32,output_shapes=(HEATMAP_SIZE, HEATMAP_SIZE, NUM_MARKS),args=[test_landmarks])
+val_label_ds = tf.data.Dataset.from_generator(preprocess_mark,output_types=tf.float32,output_shapes=(HEATMAP_SIZE, HEATMAP_SIZE, IMAGE_CHANNEL),args=[test_landmarks])
 
 val_image_label_ds = tf.data.Dataset.zip((val_image_ds, val_label_ds))
 val_image_label_ds = val_image_label_ds.batch(BATCH_SIZE)

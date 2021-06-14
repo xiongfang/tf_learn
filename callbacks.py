@@ -13,9 +13,9 @@ class LogImages(keras.callbacks.Callback):
         self.file_writer = tf.summary.create_file_writer(logdir)
     def on_epoch_end(self, epoch, logs={}):
 
-        index = random.randint(0,len(WFLWDataSet.train_filenames)-1)
-        filename = WFLWDataSet.train_filenames[index]
-        landmark = WFLWDataSet.train_landmarks[index]
+        index = random.randint(0,len(WFLWDataSet.test_filenames)-1)
+        filename = WFLWDataSet.test_filenames[index]
+        landmark = WFLWDataSet.test_landmarks[index]
 
         self.filename = filename
         self.true_heatmap = WFLWDataSet.generate_heatmaps(landmark,(WFLWDataSet.FILE_WIDTH,WFLWDataSet.FILE_HEIGHT)) #(2,64,64)

@@ -38,7 +38,7 @@ log_dir='E:/Logs/'+timeStamp+'/'
 
 input_shape = (IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNEL)
 
-model = unet_pp.create_segmentation_model(input_shape,1)
+model = unet_pp.create_segmentation_model(input_shape,WFLWDataSet.NUM_MARKS)
 #model = unet.build_model(IMAGE_WIDTH,IMAGE_HEIGHT,WFLWDataSet.NUM_MARKS)
 
 '''
@@ -71,7 +71,7 @@ def loss_fn(y_true,y_pre):
     return tf.reduce_mean(tf.square(y_true - y_pre))
 
 def test():
-    for index,(img,label) in enumerate(train_ds.take(1)):
+    for index,(img,label) in enumerate(val_ds.take(4)):
         marks,_ = WFLWDataSet.parse_heatmaps(label[0].numpy(),(WFLWDataSet.FILE_WIDTH,WFLWDataSet.FILE_HEIGHT))
         heatmaps = model(img,training=False)  # Logits for this minibatch
         print(np.sum(loss_fn(label,heatmaps)))
@@ -136,7 +136,7 @@ callbacks = [callback_checkpoint, callback_tensorboard, #callback_lr,
 
 #opt = tf.keras.optimizers.Adam(0.001)
 # Train
-model.compile(optimizer='Nadam',
+model.compile(optimizer='Adam',
               loss=tf.keras.losses.MSE,
               #loss = loss_fn,
               metrics=[tf.keras.metrics.mse])
