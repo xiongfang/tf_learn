@@ -38,6 +38,7 @@ def generate_heatmaps(img,marks_norm):
     heatmaps = heatmaps[0]+heatmaps[1]  #(256,256)
     heatmaps = np.expand_dims(heatmaps,-1) #(256,256,1)
     heatmaps = cv2.add(img,heatmaps)
+    heatmaps = np.expand_dims(heatmaps,-1)
     #heatmaps = np.transpose(heatmaps, (1, 2, 0)) #(256,256,1)
     return heatmaps
 
@@ -112,7 +113,6 @@ def preprocess_mark(filenames,landmarks):
     for index,landmark in enumerate(landmarks):
         img = load_and_preprocess_image(filenames[index])
         heatmaps = generate_heatmaps(img.numpy(),landmark)
-        heatmaps = np.expand_dims(heatmaps,-1)
         yield heatmaps
 
         
@@ -128,7 +128,7 @@ label_ds = tf.data.Dataset.from_generator(preprocess_mark,output_types=tf.float3
 
 image_label_ds = tf.data.Dataset.zip((image_ds, label_ds))
 
-BATCH_SIZE = 16
+BATCH_SIZE = 1
 
 # 设置一个和数据集大小一致的 shuffle buffer size（随机缓冲区大小）以保证数据
 # 被充分打乱。
@@ -169,12 +169,21 @@ def get_peak_location(heatmap, image_size=(256, 256)):
 
     return int(x), int(y)
 
-def parse_heatmaps(heatmaps, image_size):
+def parse_heatmaps(img,heatmap):
+    heatmap = heatmap - img
+    heatmap[heatmap < 0] = 0
     # Parse the heatmaps to get mark locations.
-    marks = []
-    heatmaps = np.transpose(heatmaps, (2, 0, 1))
-    for heatmap in heatmaps:
-        marks.append(get_peak_location(heatmap, image_size))
+    img *= 255
+    img = img.astype(np.uint8)
+    heatmap *= 255
+    heatmap = heatmap.astype(np.uint8)
+    ret, binary = cv2.threshold(heatmap,50,255,cv2.THRESH_BINARY)  
+    contours, hierarchy = cv2.findContours(binary,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)  
+    cv2.drawContours(img,contours,-1,(0,0,255),3)  
+
+    #heatmaps = np.transpose(heatmaps, (2, 0, 1))
+    #for heatmap in heatmaps:
+    #    marks.append(get_peak_location(heatmap, image_size))
 
     # Show individual heatmaps stacked.
     #heatmap_grid = np.hstack(heatmaps[:8])
@@ -182,7 +191,7 @@ def parse_heatmaps(heatmaps, image_size):
     #    heatmap_grid = np.vstack(
     #        [heatmap_grid, np.hstack(heatmaps[row:row+8])])
 
-    return np.array(marks), None
+    return img
 
 
 def cv_load_and_process_image(filename):
