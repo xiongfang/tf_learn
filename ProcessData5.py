@@ -38,7 +38,7 @@ log_dir='E:/Logs/'+timeStamp+'/'
 
 input_shape = (IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNEL)
 
-model = unet_pp.create_segmentation_model(input_shape,WFLWDataSet.NUM_MARKS)
+model = unet_pp.create_segmentation_model(input_shape,1)
 #model = unet.build_model(IMAGE_WIDTH,IMAGE_HEIGHT,WFLWDataSet.NUM_MARKS)
 
 '''
@@ -141,7 +141,7 @@ model.compile(optimizer='Adam',
               #loss = loss_fn,
               metrics=[tf.keras.metrics.mse])
 
-history = model.fit(train_ds, epochs=1000
+history = model.fit(train_ds, epochs=100
                     #,steps_per_epoch=steps_per_epoch
                     ,validation_data=val_ds
                     ,verbose=1
@@ -201,5 +201,5 @@ model.save_weights(checkpoint_dir+"/"+name)
 print("model saved")
 '''
 
-test()
-cv2.waitKey()
+#test()
+#cv2.waitKey()

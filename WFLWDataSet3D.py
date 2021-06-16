@@ -30,11 +30,15 @@ train_label_file = str(data_root.joinpath("train_data"))+"/list.txt"
 val_label_file = str(data_root.joinpath("test_data"))+"/list.txt"
 
 
-def generate_heatmaps(marks_norm, map_size):
+def generate_heatmaps(img,marks_norm):
     """A convenient function to generate heatmaps from marks."""
     #marks_norm = marks / img_size
-    heatmaps = MO.generate_heatmaps(marks_norm, map_size=map_size)
-
+    w, h,c =  img.shape[-3:]
+    heatmaps = MO.generate_heatmaps(marks_norm, map_size=(w,h)) #(2,256,256)
+    heatmaps = heatmaps[0]+heatmaps[1]  #(256,256)
+    heatmaps = np.expand_dims(heatmaps,-1) #(256,256,1)
+    heatmaps = cv2.add(img,heatmaps)
+    #heatmaps = np.transpose(heatmaps, (1, 2, 0)) #(256,256,1)
     return heatmaps
 
 def normalize(inputs):
@@ -95,39 +99,36 @@ def gen_data(file_list):
 def preprocess_image(image):
     image = tf.image.decode_png(image, channels=IMAGE_CHANNEL)
     image = tf.image.resize(image, (IMAGE_WIDTH, IMAGE_HEIGHT))
-    #image /= 255.0  #normalize to [0,1] range
+    image /= 255.0  #normalize to [0,1] range
     #image = rescale(image)
-    image = normalize(image)
+    #image = normalize(image)
     return image
 
 def load_and_preprocess_image(path):
     img = tf.io.read_file(path)
     return preprocess_image(img)
 
-def preprocess_mark(landmarks):
-    for landmark in landmarks:
-        heatmaps = generate_heatmaps(landmark,(HEATMAP_SIZE, HEATMAP_SIZE)) #(2,256,256)
-        heatmaps = [heatmaps[0]+heatmaps[1]]
-        heatmaps = np.transpose(heatmaps, (1, 2, 0)) #(256,256,2)
-        #last = heatmaps[0]
-        #for h in heatmaps[1:]:
-        #    last+=h
+def preprocess_mark(filenames,landmarks):
+    for index,landmark in enumerate(landmarks):
+        img = load_and_preprocess_image(filenames[index])
+        heatmaps = generate_heatmaps(img.numpy(),landmark)
+        heatmaps = np.expand_dims(heatmaps,-1)
         yield heatmaps
 
         
 train_filenames, train_landmarks, attributes,euler_angles = gen_data(train_label_file)
 
-train_filenames = train_filenames[:1000]
-train_landmarks = train_landmarks[:1000]
+train_filenames = train_filenames[:100]
+train_landmarks = train_landmarks[:100]
 
 path_ds = tf.data.Dataset.from_tensor_slices(train_filenames)
 image_ds = path_ds.map(load_and_preprocess_image,num_parallel_calls = tf.data.AUTOTUNE)
 
-label_ds = tf.data.Dataset.from_generator(preprocess_mark,output_types=tf.float32,output_shapes=(HEATMAP_SIZE, HEATMAP_SIZE, IMAGE_CHANNEL),args=[train_landmarks])
+label_ds = tf.data.Dataset.from_generator(preprocess_mark,output_types=tf.float32,output_shapes=(HEATMAP_SIZE, HEATMAP_SIZE, IMAGE_CHANNEL),args=[train_filenames,train_landmarks])
 
 image_label_ds = tf.data.Dataset.zip((image_ds, label_ds))
 
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 
 # 设置一个和数据集大小一致的 shuffle buffer size（随机缓冲区大小）以保证数据
 # 被充分打乱。
@@ -137,12 +138,12 @@ image_label_ds = image_label_ds.batch(BATCH_SIZE)
 image_label_ds = image_label_ds.prefetch(tf.data.AUTOTUNE)
 
 test_filenames, test_landmarks, attributes,euler_angles = gen_data(val_label_file)
-test_filenames = test_filenames[:100]
-test_landmarks = test_landmarks[:100]
+test_filenames = test_filenames[:10]
+test_landmarks = test_landmarks[:10]
 
 path_ds = tf.data.Dataset.from_tensor_slices(test_filenames)
 val_image_ds = path_ds.map(load_and_preprocess_image)
-val_label_ds = tf.data.Dataset.from_generator(preprocess_mark,output_types=tf.float32,output_shapes=(HEATMAP_SIZE, HEATMAP_SIZE, IMAGE_CHANNEL),args=[test_landmarks])
+val_label_ds = tf.data.Dataset.from_generator(preprocess_mark,output_types=tf.float32,output_shapes=(HEATMAP_SIZE, HEATMAP_SIZE, IMAGE_CHANNEL),args=[test_filenames,test_landmarks])
 
 val_image_label_ds = tf.data.Dataset.zip((val_image_ds, val_label_ds))
 val_image_label_ds = val_image_label_ds.batch(BATCH_SIZE)
@@ -184,19 +185,25 @@ def parse_heatmaps(heatmaps, image_size):
     return np.array(marks), None
 
 
-def test(filename,landmark,landmark_pre=None):
+def cv_load_and_process_image(filename):
     img = cv2.imread(filename)
-    return test_img(img,landmark,landmark_pre)
+    img = cv2.resize(img,(IMAGE_WIDTH,IMAGE_HEIGHT))
+    img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    img1 = np.divide(img,255.0,dtype=np.float32)
+    img1 = np.expand_dims(img1,-1)
+    return img1
 
 def test_img(img,landmark,landmark_pre=None):
-    img = cv2.resize(img,(FILE_WIDTH,FILE_HEIGHT))
-    for mark in landmark:
-        cv2.circle(img, tuple(mark.astype(int)),1,(0,0,255))
+   
+    #for mark in landmark:
+    #    cv2.circle(img, tuple(mark.astype(int)),1,(0,0,255))
+    img = cv2.add(img,landmark)
     if landmark_pre is None:
         ...
     else:
-        for mark in landmark_pre:
-            cv2.circle(img, tuple(mark.astype(int)),1,(0,255,0))
+        #for mark in landmark_pre:
+        #    cv2.circle(img, tuple(mark.astype(int)),1,(0,255,0))
+        img = cv2.add(img,landmark_pre)
     #cv2.imshow(filename, img)
     return img
 
@@ -204,18 +211,20 @@ def test_img(img,landmark,landmark_pre=None):
 def transpose_marks(landmarks):
     results = []
     for mark in landmarks:
-        mark = mark[:2]*(FILE_WIDTH,FILE_HEIGHT)
+        mark = mark[:2]*(IMAGE_WIDTH,IMAGE_HEIGHT)
         results.append(mark)
     return results
 
 if __name__ == "__main__":
     index = 0#random.randint(0,len(test_filenames)-1)
-    img = test(test_filenames[index],transpose_marks(test_landmarks[index]))
-    cv2.imshow(test_filenames[index],img)
+    img = cv_load_and_process_image(test_filenames[index])
+    map = generate_heatmaps(img,test_landmarks[index])
+    cv2.imshow(test_filenames[index],map)
     cv2.waitKey()
 
     for index,(img,label) in enumerate(image_label_ds.take(1)):
-        marks,_ = parse_heatmaps(label[0].numpy(),(FILE_WIDTH,FILE_HEIGHT))
-        img = test_img(cv2.cvtColor(img[0].numpy(),cv2.COLOR_RGB2BGR),marks)
-        cv2.imshow(train_filenames[index],img)
+        #marks,_ = parse_heatmaps(label[0].numpy(),(FILE_WIDTH,FILE_HEIGHT))
+        #label = np.transpose(label,(2,0,1))
+        #img = test_img(img[0].numpy(),label[0].numpy())
+        cv2.imshow(train_filenames[index],label[0].numpy())
         cv2.waitKey()
